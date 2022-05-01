@@ -71,7 +71,7 @@
             line.style.top = (y1).toString() + "px";
             line.style.left = (x1).toString() + "px";
 
-            canvas.appendChild(line);
+            canvas.insertAdjacentElement("afterbegin", line);
         }
 
         function createVertex(e) {
@@ -81,6 +81,7 @@
             let div = document.createElement('button');
             div.setAttribute('class', 'round');
             div.setAttribute('onclick', 'createEdge(event, this)');
+            div.setAttribute('id', counter.toString());
             div.style.top = coord[1].toString() + "px";
             div.style.left = coord[0].toString() + "px";
             div.textContent = counter.toString();
