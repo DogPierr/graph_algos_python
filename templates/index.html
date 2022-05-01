@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
     <script>
         let vertecies = [];
         let edges = [];
@@ -24,10 +22,11 @@
             return document.getElementById(to.toString() + from.toString());
         }
 
-        function drawPath(path) {
+        function clearPath() {
+            console.log(path);
             for (let i = 0; i < path.length; ++i) {
                 let line = getLine(path[i][0], path[i][1]);
-                line.style.background = "orange";
+                line.style.background = "black";
             }
         }
 
@@ -110,13 +109,15 @@
 
         function get_len() {
             let dict = JSON.stringify(edges);
-            console.log(dict);
+            console.log($("#name").val());
+            console.log(edges);
             $.ajax({
                 type: "POST",
                 url: "/get_len",
-                data: {0: dict},
+                data: {0: dict, 1: $("#name").val()},
                 type: 'POST',
                 success: function (response) {
+                    clearPath();
                     step = 0;
                     path = JSON.parse(response)
                     console.log(path);
@@ -127,6 +128,8 @@
             });
         }
     </script>
+    <meta charset="UTF-8">
+    <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
 
     <style>
         .round {
@@ -150,8 +153,6 @@
 
         .step {
             display: block;
-            width: 15px;
-            height: 15px;
         }
     </style>
 </head>
@@ -166,7 +167,7 @@
     <input type="button" value="Решить" onclick="get_len();">
 </form>
 
-<button class="step" onclick="makeStep()"></button>
+<button class="step" onclick="makeStep()">Step</button>
 
 <div id="len"></div>
 
