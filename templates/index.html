@@ -22,23 +22,48 @@
             return document.getElementById(to.toString() + from.toString());
         }
 
+        function getVertex(number) {
+            return document.getElementById(number.toString());
+        }
+
         function clearPath() {
-            console.log(path);
             for (let i = 0; i < path.length; ++i) {
-                let line = getLine(path[i][0], path[i][1]);
-                line.style.background = "black";
+                if (path[i].length == 2) {
+                    let line = getLine(path[i][0], path[i][1]);
+                    line.style.background = "black";
+                } else {
+                    if (path[i][0] == "bridge") {
+                        let line = getLine(path[i][1], path[i][2]);
+                        line.style.background = "black";
+                    } else {
+                        let vertex = getVertex(path[i][0]);
+                        vertex.innerHTML = vertex.id;
+                    }
+                }
             }
         }
 
         function makeStep() {
-            let line = getLine(path[step][0], path[step][1]);
-            line.style.background = "orange";
-            ++step;
+            if (path[step].length == 2) {
+                let line = getLine(path[step][0], path[step][1]);
+                line.style.background = "orange";
+                ++step;
+            } else {
+                if (path[step][0] == "bridge") {
+                    let line = getLine(path[step][1], path[step][2]);
+                    line.style.background = "brown";
+                    ++step;
+                } else {
+                    let vertex = getVertex(path[step][0]);
+                    vertex.innerHTML = path[step][0].toString() + ": " + path[step][1].toString() + "/" + path[step][2].toString();
+                    ++step
+                }
+            }
         }
 
         function drawLine(from, to) {
             if (from == to) return;
-            if (document.getElementById(from.innerHTML + to.innerHTML) || document.getElementById(to.innerHTML + from.innerHTML)) return;
+            if (document.getElementById(from.id + to.id) || document.getElementById(to.id + from.id)) return;
             let x1 = parseInt(from.style.left) + side;
             let y1 = parseInt(from.style.top) + side;
             let x2 = parseInt(to.style.left) + side;
@@ -128,6 +153,24 @@
                 }
             });
         }
+
+        function clearCanvas() {
+            let vertices = document.getElementsByClassName("round");
+            let edges = document.getElementsByClassName("line");
+            for (let i = 0; i < vertices.length; ++i) {
+                vertices[i].parentElement.removeChild(vertices[i]);
+            }
+            vertices = [];
+            for (let i = 0; i < edges.length; ++i) {
+                edges[i].parentElement.removeChild(edges[i]);
+            }
+            edges = [];
+            counter = 1;
+            from = -1;
+            to = -1;
+            path = [];
+            step = 0;
+        }
     </script>
     <meta charset="UTF-8">
     <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
@@ -164,11 +207,13 @@
     <select id="name" name="name" type="text">
         <option>Depth-First Search</option>
         <option>Breadth-First Search</option>
+        <option>Bridges</option>
     </select>
-    <input type="button" value="Решить" onclick="get_len();">
+    <input type="button" value="Solve" onclick="get_len();">
 </form>
 
 <button class="step" onclick="makeStep()">Step</button>
+<button class="step" onclick="clearCanvas()">Clear graph</button>
 
 <div id="len"></div>
 

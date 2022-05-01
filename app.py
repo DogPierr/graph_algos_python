@@ -8,7 +8,11 @@ class Graph:
         self.graph = edges;
         self.amount_of_vertices = len(edges)
         self.path = []
+        self.tins_and_rets = []
         self.visited = [False for i in range(self.amount_of_vertices)]
+        self.ret = [0 for i in range(self.amount_of_vertices)]
+        self.t_in = [0 for i in range(self.amount_of_vertices)]
+        self.timer = 0
 
     def dfs(self, vertex):
         if self.visited[vertex]:
@@ -34,6 +38,28 @@ class Graph:
                 self.path.append([vertex + 1, to + 1])
                 queue.append(to)
 
+    def bridge_finder(self, vertex, parent):
+        self.timer += 1
+        self.t_in[vertex] = self.timer
+        self.ret[vertex] = self.timer
+        self.path.append([vertex + 1, self.t_in[vertex], self.t_in[vertex]])
+        self.visited[vertex] = True
+        for to in self.graph[vertex]:
+            if to != parent:
+                if self.visited[to]:
+                    self.ret[vertex] = min(self.ret[vertex], self.ret[to])
+                    self.path.append([vertex + 1, self.t_in[vertex], self.t_in[vertex]])
+                else:
+                    self.path.append([vertex + 1, to + 1])
+                    self.bridge_finder(to, vertex)
+                    self.ret[vertex] = min(self.ret[vertex], self.ret[to])
+                    self.path.append([vertex + 1, self.t_in[vertex], self.t_in[vertex]])
+                    if self.ret[to] > self.t_in[vertex]:
+                        self.path.append(["bridge", vertex + 1, to + 1])
+
+
+
+
 
 @app.route('/')
 def index():
@@ -51,7 +77,8 @@ def get_len():
         graph.dfs(0)
     if algo == "Breadth-First Search":
         graph.bfs()
-    graph.dfs(0)
+    if algo == "Bridges":
+        graph.bridge_finder(0, -1)
     return json.dumps(graph.path)
 
 
