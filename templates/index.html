@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        let vertecies = [];
+        let edges = [];
+        let step = 0;
+        let path = [];
+        const side = 20;
+        let counter = 1;
+        let from = -1;
+        let to = -1;
+
+        function pos(e) {
+            return [e.pageX, e.pageY];
+        }
+
+        function getLine(from, to) {
+            if (document.getElementById(from.toString() + to.toString())) {
+                return document.getElementById(from.toString() + to.toString());
+            }
+            return document.getElementById(to.toString() + from.toString());
+        }
+
+        function getVertex(number) {
+            return document.getElementById(number.toString());
+        }
+
+        function clearPath() {
+            for (let i = 0; i < path.length; ++i) {
+                if (path[i].length == 2) {
+                    let line = getLine(path[i][0], path[i][1]);
+                    line.style.background = "black";
+                } else {
+                    if (path[i][0] == "bridge") {
+                        let line = getLine(path[i][1], path[i][2]);
+                        line.style.background = "black";
+                    } else {
+                        let vertex = getVertex(path[i][0]);
+                        vertex.innerHTML = vertex.id;
+                    }
+                }
+            }
+        }
+
+        function makeStep() {
+            if (path[step].length == 2) {
+                let line = getLine(path[step][0], path[step][1]);
+                line.style.background = "orange";
+                ++step;
+            } else {
+                if (path[step][0] == "bridge") {
+                    let line = getLine(path[step][1], path[step][2]);
+                    line.style.background = "brown";
+                    ++step;
+                } else {
+                    let vertex = getVertex(path[step][0]);
+                    vertex.innerHTML = path[step][0].toString() + ": " + path[step][1].toString() + "/" + path[step][2].toString();
+                    ++step
+                }
+            }
+        }
+
+        function drawLine(from, to) {
+            if (from == to) return;
+            if (document.getElementById(from.id + to.id) || document.getElementById(to.id + from.id)) return;
+            let x1 = parseInt(from.style.left) + side;
+            let y1 = parseInt(from.style.top) + side;
+            let x2 = parseInt(to.style.left) + side;
+            let y2 = parseInt(to.style.top) + side;
+
+            let tang = (y2 - y1) / (x2 - x1)
+            let arctg = Math.atan(tang);
+            let angle = arctg * 180 / Math.PI;
+
+            if (tang < 0) {
+                angle = 90 + angle;
+            } else if (tang > 0) {
+                angle = -(90 - angle);
+            }
+
+            if (x1 > x2 && y1 > y2) {
+                angle += 180;
+            } else if (x2 > x1 && y2 < y1) {
+                angle += 180;
+            }
+
+            let canvas = document.getElementsByTagName('body')[0];
+            let line = document.createElement('div');
+
+            line.setAttribute('class', 'line');
+            line.setAttribute('id', from.innerHTML + to.innerHTML);
+            line.style.transform = "rotate(" + angle.toString() + "deg)";
+            line.style.height = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)).toString() + "px";
+            line.style.transformOrigin = "top left";
+            line.style.top = (y1).toString() + "px";
+            line.style.left = (x1).toString() + "px";
+
+            canvas.insertAdjacentElement("afterbegin", line);
+        }
+
+        function createVertex(e) {
+            let coord = pos(e);
+            vertecies.push(counter);
+            let canvas = document.getElementsByTagName('body')[0];
+            let div = document.createElement('button');
+            div.setAttribute('class', 'round');
+            div.setAttribute('onclick', 'createEdge(event, this)');
+            div.setAttribute('id', counter.toString());
+            div.style.top = coord[1].toString() + "px";
+            div.style.left = coord[0].toString() + "px";
+            div.textContent = counter.toString();
+            canvas.appendChild(div);
+            edges.push([]);
+            ++counter;
+        }
+
+        function createEdge(e, obj) {
+            let coord = pos(e);
+            if (from == -1) {
+                from = obj;
+            } else {
+                to = obj;
+            }
+            if (to != -1) {
+                drawLine(from, to);
+                if (from != to) {
+                    edges[from.innerHTML - 1].push(to.innerHTML - 1);
+                    edges[to.innerHTML - 1].push(from.innerHTML - 1);
+                }
+                from = -1;
+                to = -1;
+            }
+        }
+
+        function get_len() {
+            let dict = JSON.stringify(edges);
+            console.log($("#name").val());
+            console.log(edges);
+            $.ajax({
+                type: "POST",
+                url: "/get_len",
+                data: {0: dict, 1: $("#name").val()},
+                type: 'POST',
+                success: function (response) {
+                    clearPath();
+                    step = 0;
+                    path = JSON.parse(response)
+                    console.log(path);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        }
+
+        function clearCanvas() {
+            let vertices = document.getElementsByClassName("round");
+            let edges = document.getElementsByClassName("line");
+            for (let i = 0; i < vertices.length; ++i) {
+                vertices[i].parentElement.removeChild(vertices[i]);
+            }
+            vertices = [];
+            for (let i = 0; i < edges.length; ++i) {
+                edges[i].parentElement.removeChild(edges[i]);
+            }
+            edges = [];
+            counter = 1;
+            from = -1;
+            to = -1;
+            path = [];
+            step = 0;
+        }
+    </script>
+    <meta charset="UTF-8">
+    <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
+
+    <style>
+        .round {
+            display: block;
+            position: absolute;
+            height: 40px;
+            width: 40px;
+            text-align: inherit;
+            background-color: green;
+            border-radius: 50%;
+        }
+
+        .line {
+            display: block;
+            position: absolute;
+            width: 3px;
+            height: 10px;
+            background-color: black;
+            border-radius: 1px;
+        }
+
+        .step {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<form action="/get_len" method="post" name="form">
+    <select id="name" name="name" type="text">
+        <option>Depth-First Search</option>
+        <option>Breadth-First Search</option>
+        <option>Bridges</option>
+    </select>
+    <input type="button" value="Solve" onclick="get_len();">
+</form>
+
+<button class="step" onclick="makeStep()">Step</button>
+<button class="step" onclick="clearCanvas()">Clear graph</button>
+
+<div id="len"></div>
+
+
+<div id="body-container" onmousedown="createVertex(event)"
+     style="display: flex; flex-direction: column; min-height: 100vh;">
+</div>
+</body>
+</html>
